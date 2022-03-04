@@ -1,0 +1,1048 @@
+---
+title: "Capstone 4th Economy"
+author: "Quan, Yanhao"
+date: "2022/2/2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library(readxl) #reading excel files
+library(tidyverse)
+library(mFilter) #Package used for hp filter
+library(cowplot) #Allows for side by side graphs
+library(stringr)#for merge columns to creat a date column
+library(haven)
+library(lfe)
+library(dplyr)
+
+```
+
+
+```{r}
+project_path <- "C:/Users/85384/Desktop/Capstone" 
+setwd(project_path)
+lf <- read.csv("emp-unemp.xlsx - Sheet1.csv")
+lf2 <- lf[-c(1, 2, 3, 4), -c(2,5,14:17)]
+#colnames(lf2) <- lf[4,]
+#View(lf2)
+
+new_lf <- na.omit(lf2)
+
+
+names(new_lf)[names(new_lf) == 'X'] <- 'State'
+names(new_lf)[names(new_lf) == 'X.1'] <- 'Year'
+names(new_lf)[names(new_lf) == 'X.2'] <- 'Month'
+names(new_lf)[names(new_lf) == 'X.4'] <- 'Population'
+names(new_lf)[names(new_lf) == 'X.5'] <- 'Labor_Force'
+names(new_lf)[names(new_lf) == 'X.6'] <- '%_of_population'
+names(new_lf)[names(new_lf) == 'X.7'] <- 'Employed'
+names(new_lf)[names(new_lf) == 'Total.E.Number.of.people.in.civilian.labor.force.who.are.employed'] <- '%Emp'
+names(new_lf)[names(new_lf) == 'X.8'] <- 'Unemployed'
+names(new_lf)[names(new_lf) == 'X.9'] <- 'Unemployed_rate'
+names(new_lf)[names(new_lf) == 'X.10'] <- 'Period'
+View(new_lf)
+is.data.frame(new_lf)
+
+is.numeric(new_lf)
+
+```
+
+
+```{r}
+new_lf$State <- as.numeric(new_lf$State)
+#new_lf$County <- as.numeric(new_lf$County)
+new_lf$early <- ifelse(new_lf$State %in% c('1','2','4','5','12','13','16','18','19','24','28','29','30','31','33','38','39','40','46','45','47','48','49','54','56'),1,0)
+new_lf$Employed <- as.numeric(new_lf$Employed)
+#delete the "," in the data
+#new_lf$Employed <- as.numeric(gsub(",", "",new_lf$Employed))
+#new_lf$Civilian_Labor_Force <- as.numeric(gsub(",", "",new_lf$Civilian_Labor_Force))
+#new_lf$Unemployed_level <- as.numeric(gsub(",", "",new_lf$Unemployed_level))
+View(new_lf)
+#class(new_lf1$Civilian_Labor_Force)
+class(new_lf$Employed)
+#class(new_lf$Employed)
+
+#library(lubridate)
+#new_lf$Period <- my(new_lf$Period)
+#format(new_lf$Period, "%Y%m")
+
+#class(new_lf$Period)
+
+```
+
+```{r}
+#lf_states <- new_lf %>% group_by(State,Period) %>%
+    #summarise(Emp = sum(Employed),lab_force = sum(Civilian_Labor_Force))
+lf_states <- new_lf
+lf_states <- filter(lf_states, Year != 2018)
+#lf_states$period <- with(lf_states, sprintf("%d-%02d", Year, Month))
+lf_states$Period <- as.Date(lf_states$Period,"%Y/%m/%d")
+#library(lubridate)
+#lf_states$Period <- my(lf_states$period)
+#format(lf_states$Period, "%m/%d/%Y")
+class(lf_states$Period)
+View(lf_states)
+```
+
+
+
+```{r}
+lf_states <- as.data.frame(lf_states)
+#class(new_lf$Labor_Force)
+#class(new_lf$Employed)
+lf_states$Emp <- as.numeric(lf_states$Emp)
+lf_states$lEmp <- log(lf_states$Emp)
+#lf_states_6.25 <- hpfilter(lf_states$lEmp , freq = 6.25,type = "lambda")
+#lf_states$Emp_T6.25 <- lf_states_6.25$trend
+#lf_states$Emp_C6.25 <- lf_states_6.25$cycle
+
+head(lf_states)
+ 
+```
+
+## Draw two figures. 
+* On the first, draw the raw data and the secular trend estimate. 
+* On the second draw the Employment cycle estimate.
+
+#The Trend and cycle for 25 states which ends the UI policy earily#
+
+#Alabama
+```{r}
+lf_states1 <- filter(lf_states, Year != 2019, State == 1, early == 1)
+lf_states1_6.25 <- hpfilter(lf_states1$lEmp , freq = 6.25,type = "lambda")
+lf_states1$Emp_T6.25 <- lf_states1_6.25$trend
+lf_states1$Emp_C6.25 <- lf_states1_6.25$cycle
+plot1<-ggplot(data=lf_states1,group = 1)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot2<-ggplot(data=lf_states1)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot1, plot2,ncol = 1,align = 'v')
+```
+
+
+
+#Alaska
+```{r}
+lf_states2 <- filter(lf_states, Year != 2019, State == 2, early == 1)
+lf_states2_6.25 <- hpfilter(lf_states2$lEmp , freq = 6.25,type = "lambda")
+lf_states2$Emp_T6.25 <- lf_states2_6.25$trend
+lf_states2$Emp_C6.25 <- lf_states2_6.25$cycle
+plot3<-ggplot(data=lf_states2)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot4<-ggplot(data=lf_states2)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot3, plot4,ncol = 1,align = 'v')
+```
+
+#Arizona
+```{r}
+lf_states4 <- filter(lf_states,Year != 2019, State == 4, early == 1)
+lf_states4_6.25 <- hpfilter(lf_states4$lEmp , freq = 6.25,type = "lambda")
+lf_states4$Emp_T6.25 <- lf_states4_6.25$trend
+lf_states4$Emp_C6.25 <- lf_states4_6.25$cycle
+plot5<-ggplot(data=lf_states4)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot6<-ggplot(data=lf_states4)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot5, plot6,ncol = 1,align = 'v')
+```
+
+#Arkansas
+```{r}
+lf_states5 <- filter(lf_states, Year != 2019, State == 5, early == 1)
+lf_states5_6.25 <- hpfilter(lf_states5$lEmp , freq = 6.25,type = "lambda")
+lf_states5$Emp_T6.25 <- lf_states5_6.25$trend
+lf_states5$Emp_C6.25 <- lf_states5_6.25$cycle
+plot7<-ggplot(data=lf_states5)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot8<-ggplot(data=lf_states5)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot7, plot8,ncol = 1,align = 'v')
+```
+
+#Florida
+```{r}
+lf_states12 <- filter(lf_states, Year != 2019, State == 12, early == 1)
+lf_states12_6.25 <- hpfilter(lf_states12$lEmp , freq = 6.25,type = "lambda")
+lf_states12$Emp_T6.25 <- lf_states12_6.25$trend
+lf_states12$Emp_C6.25 <- lf_states12_6.25$cycle
+plot9<-ggplot(data=lf_states12)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot10<-ggplot(data=lf_states12)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot9, plot10,ncol = 1,align = 'v')
+```
+
+#Georgia
+```{r}
+lf_states13 <- filter(lf_states, Year != 2019, State == 13, early == 1)
+lf_states13_6.25 <- hpfilter(lf_states13$lEmp , freq = 6.25,type = "lambda")
+lf_states13$Emp_T6.25 <- lf_states13_6.25$trend
+lf_states13$Emp_C6.25 <- lf_states13_6.25$cycle
+plot11<-ggplot(data=lf_states13)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot12<-ggplot(data=lf_states13)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot11, plot12,ncol = 1,align = 'v')
+```
+
+#Idaho
+```{r}
+lf_states16 <- filter(lf_states, Year != 2019, State == 16, early == 1)
+lf_states16_6.25 <- hpfilter(lf_states16$lEmp , freq = 6.25,type = "lambda")
+lf_states16$Emp_T6.25 <- lf_states16_6.25$trend
+lf_states16$Emp_C6.25 <- lf_states16_6.25$cycle
+plot13<-ggplot(data=lf_states16)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot14<-ggplot(data=lf_states16)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot13, plot14,ncol = 1,align = 'v')
+```
+
+#Indiana
+```{r}
+lf_states18 <- filter(lf_states, Year != 2019, State == 18, early == 1)
+lf_states18_6.25 <- hpfilter(lf_states18$lEmp , freq = 6.25,type = "lambda")
+lf_states18$Emp_T6.25 <- lf_states18_6.25$trend
+lf_states18$Emp_C6.25 <- lf_states18_6.25$cycle
+plot15<-ggplot(data=lf_states18)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot16<-ggplot(data=lf_states18)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot15, plot16,ncol = 1,align = 'v')
+```
+
+#Iowa#
+```{r}
+lf_states19 <- filter(lf_states, Year != 2019, State == 19, early == 1)
+lf_states19_6.25 <- hpfilter(lf_states19$lEmp , freq = 6.25,type = "lambda")
+lf_states19$Emp_T6.25 <- lf_states19_6.25$trend
+lf_states19$Emp_C6.25 <- lf_states19_6.25$cycle
+plot17<-ggplot(data=lf_states19)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot18<-ggplot(data=lf_states19)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot17, plot18,ncol = 1,align = 'v')
+```
+
+#Maryland
+```{r}
+lf_states24 <- filter(lf_states, Year!= 2019, State == 24, early == 1)
+lf_states24_6.25 <- hpfilter(lf_states24$lEmp , freq = 6.25,type = "lambda")
+lf_states24$Emp_T6.25 <- lf_states24_6.25$trend
+lf_states24$Emp_C6.25 <- lf_states24_6.25$cycle
+plot19<-ggplot(data=lf_states24)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot20<-ggplot(data=lf_states24)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot19, plot20,ncol = 1,align = 'v')
+```
+
+#Mississippi
+```{r}
+lf_states28 <- filter(lf_states, Year != 2019, State == 28, early == 1)
+lf_states28_6.25 <- hpfilter(lf_states28$lEmp , freq = 6.25,type = "lambda")
+lf_states28$Emp_T6.25 <- lf_states28_6.25$trend
+lf_states28$Emp_C6.25 <- lf_states28_6.25$cycle
+plot21<-ggplot(data=lf_states28)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot22<-ggplot(data=lf_states28)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot21, plot22,ncol = 1,align = 'v')
+```
+
+#Missouri
+```{r}
+lf_states29 <- filter(lf_states, Year != 2019, State == 29, early == 1)
+lf_states29_6.25 <- hpfilter(lf_states29$lEmp , freq = 6.25,type = "lambda")
+lf_states29$Emp_T6.25 <- lf_states29_6.25$trend
+lf_states29$Emp_C6.25 <- lf_states29_6.25$cycle
+plot23<-ggplot(data=lf_states29)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot24<-ggplot(data=lf_states29)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot23, plot24,ncol = 1,align = 'v')
+```
+
+#Montana
+```{r}
+lf_states30 <- filter(lf_states, Year != 2019, State == 30, early == 1)
+lf_states30_6.25 <- hpfilter(lf_states30$lEmp , freq = 6.25,type = "lambda")
+lf_states30$Emp_T6.25 <- lf_states30_6.25$trend
+lf_states30$Emp_C6.25 <- lf_states30_6.25$cycle
+plot25<-ggplot(data=lf_states30)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot26<-ggplot(data=lf_states30)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot25, plot26,ncol = 1,align = 'v')
+```
+
+#Nebraska
+```{r}
+lf_states31 <- filter(lf_states, Year != 2019, State == 31, early == 1)
+lf_states31_6.25 <- hpfilter(lf_states31$lEmp , freq = 6.25,type = "lambda")
+lf_states31$Emp_T6.25 <- lf_states31_6.25$trend
+lf_states31$Emp_C6.25 <- lf_states31_6.25$cycle
+plot27<-ggplot(data=lf_states31)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot28<-ggplot(data=lf_states31)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot27, plot28,ncol = 1,align = 'v')
+```
+
+#New Hampshire
+```{r}
+lf_states33 <- filter(lf_states, Year != 2019, State == 33, early == 1)
+lf_states33_6.25 <- hpfilter(lf_states33$lEmp , freq = 6.25,type = "lambda")
+lf_states33$Emp_T6.25 <- lf_states33_6.25$trend
+lf_states33$Emp_C6.25 <- lf_states33_6.25$cycle
+plot29<-ggplot(data=lf_states33)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot30<-ggplot(data=lf_states33)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot29, plot30,ncol = 1,align = 'v')
+```
+
+#North Dakota
+```{r}
+lf_states38 <- filter(lf_states, Year != 2019, State == 38, early == 1)
+lf_states38_6.25 <- hpfilter(lf_states38$lEmp , freq = 6.25,type = "lambda")
+lf_states38$Emp_T6.25 <- lf_states38_6.25$trend
+lf_states38$Emp_C6.25 <- lf_states38_6.25$cycle
+plot31<-ggplot(data=lf_states38)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot32<-ggplot(data=lf_states38)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot31, plot32,ncol = 1,align = 'v')
+```
+
+#Ohio
+```{r}
+lf_states39 <- filter(lf_states, Year != 2019, State == 39, early == 1)
+lf_states39_6.25 <- hpfilter(lf_states39$lEmp , freq = 6.25,type = "lambda")
+lf_states39$Emp_T6.25 <- lf_states39_6.25$trend
+lf_states39$Emp_C6.25 <- lf_states39_6.25$cycle
+plot33<-ggplot(data=lf_states39)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot34<-ggplot(data=lf_states39)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot33, plot34,ncol = 1,align = 'v')
+```
+
+#Oklahoma
+```{r}
+lf_states40 <- filter(lf_states, Year != 2019, State == 40, early == 1)
+lf_states40_6.25 <- hpfilter(lf_states40$lEmp , freq = 6.25,type = "lambda")
+lf_states40$Emp_T6.25 <- lf_states40_6.25$trend
+lf_states40$Emp_C6.25 <- lf_states40_6.25$cycle
+plot35<-ggplot(data=lf_states40)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot36<-ggplot(data=lf_states40)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot35, plot36,ncol = 1,align = 'v')
+```
+
+#South Carolina
+```{r}
+lf_states45 <- filter(lf_states, Year != 2019, State == 45, early == 1)
+lf_states45_6.25 <- hpfilter(lf_states45$lEmp , freq = 6.25,type = "lambda")
+lf_states45$Emp_T6.25 <- lf_states45_6.25$trend
+lf_states45$Emp_C6.25 <- lf_states45_6.25$cycle
+plot37<-ggplot(data=lf_states45)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot38<-ggplot(data=lf_states45)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot37, plot38,ncol = 1,align = 'v')
+```
+
+#South Dakota
+```{r}
+lf_states46 <- filter(lf_states, Year != 2019, State == 46, early == 1)
+lf_states46_6.25 <- hpfilter(lf_states46$lEmp , freq = 6.25,type = "lambda")
+lf_states46$Emp_T6.25 <- lf_states46_6.25$trend
+lf_states46$Emp_C6.25 <- lf_states46_6.25$cycle
+plot39<-ggplot(data=lf_states46)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot40<-ggplot(data=lf_states46)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot39, plot40,ncol = 1,align = 'v')
+```
+
+#Tennessee
+```{r}
+lf_states47 <- filter(lf_states, Year != 2019, State == 47, early == 1)
+lf_states47_6.25 <- hpfilter(lf_states47$lEmp , freq = 6.25,type = "lambda")
+lf_states47$Emp_T6.25 <- lf_states47_6.25$trend
+lf_states47$Emp_C6.25 <- lf_states47_6.25$cycle
+plot41<-ggplot(data=lf_states47)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot42<-ggplot(data=lf_states47)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot41, plot42,ncol = 1,align = 'v')
+```
+
+#Texas
+```{r}
+lf_states48 <- filter(lf_states, Year != 2019, State == 48, early == 1)
+lf_states48_6.25 <- hpfilter(lf_states48$lEmp , freq = 6.25,type = "lambda")
+lf_states48$Emp_T6.25 <- lf_states48_6.25$trend
+lf_states48$Emp_C6.25 <- lf_states48_6.25$cycle
+plot43<-ggplot(data=lf_states48)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot44<-ggplot(data=lf_states48)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot43, plot44,ncol = 1,align = 'v')
+```
+
+#Utah
+```{r}
+lf_states49 <- filter(lf_states, Year != 2019, State == 49, early == 1)
+lf_states49_6.25 <- hpfilter(lf_states49$lEmp , freq = 6.25,type = "lambda")
+lf_states49$Emp_T6.25 <- lf_states49_6.25$trend
+lf_states49$Emp_C6.25 <- lf_states49_6.25$cycle
+plot45<-ggplot(data=lf_states49)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot46<-ggplot(data=lf_states49)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot45, plot46,ncol = 1,align = 'v')
+```
+
+#West Virginia
+```{r}
+lf_states54 <- filter(lf_states, Year != 2019, State == 54, early == 1)
+lf_states54_6.25 <- hpfilter(lf_states54$lEmp , freq = 6.25,type = "lambda")
+lf_states54$Emp_T6.25 <- lf_states54_6.25$trend
+lf_states54$Emp_C6.25 <- lf_states54_6.25$cycle
+plot47<-ggplot(data=lf_states54)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot48<-ggplot(data=lf_states54)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot47, plot48,ncol = 1,align = 'v')
+```
+
+
+#Wyoming
+```{r}
+lf_states56 <- filter(lf_states, Year != 2019, State == 56, early == 1)
+lf_states56_6.25 <- hpfilter(lf_states56$lEmp , freq = 6.25,type = "lambda")
+lf_states56$Emp_T6.25 <- lf_states56_6.25$trend
+lf_states56$Emp_C6.25 <- lf_states56_6.25$cycle
+plot49<-ggplot(data=lf_states56)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot50<-ggplot(data=lf_states56)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot49, plot50,ncol = 1,align = 'v')
+```
+
+
+#Graph the Trend and Cycle for 25 states which ends the UI policy on Sep.2021#
+
+#California
+```{r}
+lf_states6 <- filter(lf_states, Year != 2019, State == 6, early == 0)
+lf_states6_6.25 <- hpfilter(lf_states6$lEmp , freq = 6.25,type = "lambda")
+lf_states6$Emp_T6.25 <- lf_states6_6.25$trend
+lf_states6$Emp_C6.25 <- lf_states6_6.25$cycle
+plot51<-ggplot(data=lf_states6)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot52<-ggplot(data=lf_states6)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot51, plot52,ncol = 1,align = 'v')
+```
+
+#Colorado
+```{r}
+lf_states8 <- filter(lf_states, Year != 2019, State == 8, early == 0)
+lf_states8_6.25 <- hpfilter(lf_states8$lEmp , freq = 6.25,type = "lambda")
+lf_states8$Emp_T6.25 <- lf_states8_6.25$trend
+lf_states8$Emp_C6.25 <- lf_states8_6.25$cycle
+plot53<-ggplot(data=lf_states8)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot54<-ggplot(data=lf_states8)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot53, plot54,ncol = 1,align = 'v')
+```
+
+#Connecticut
+```{r}
+lf_states9 <- filter(lf_states, Year != 2019, State == 9, early == 0)
+lf_states9_6.25 <- hpfilter(lf_states9$lEmp , freq = 6.25,type = "lambda")
+lf_states9$Emp_T6.25 <- lf_states9_6.25$trend
+lf_states9$Emp_C6.25 <- lf_states9_6.25$cycle
+plot55<-ggplot(data=lf_states9)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot56<-ggplot(data=lf_states9)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot55, plot56,ncol = 1,align = 'v')
+```
+
+#Delaware
+```{r}
+lf_states10 <- filter(lf_states, Year != 2019, State == 10, early == 0)
+lf_states10_6.25 <- hpfilter(lf_states10$lEmp , freq = 6.25,type = "lambda")
+lf_states10$Emp_T6.25 <- lf_states10_6.25$trend
+lf_states10$Emp_C6.25 <- lf_states10_6.25$cycle
+plot57<-ggplot(data=lf_states10)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot58<-ggplot(data=lf_states10)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot57, plot58,ncol = 1,align = 'v')
+```
+
+#DISTRICT OF COLUMBIA
+```{r}
+lf_states11 <- filter(lf_states, Year != 2019, State == 11, early == 0)
+lf_states11_6.25 <- hpfilter(lf_states11$lEmp , freq = 6.25,type = "lambda")
+lf_states11$Emp_T6.25 <- lf_states11_6.25$trend
+lf_states11$Emp_C6.25 <- lf_states11_6.25$cycle
+plot59<-ggplot(data=lf_states11)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot60<-ggplot(data=lf_states11)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot59, plot60,ncol = 1,align = 'v')
+```
+
+
+#HAWAII
+```{r}
+lf_states15 <- filter(lf_states, Year != 2019, State == 15, early == 0)
+lf_states15_6.25 <- hpfilter(lf_states15$lEmp , freq = 6.25,type = "lambda")
+lf_states15$Emp_T6.25 <- lf_states15_6.25$trend
+lf_states15$Emp_C6.25 <- lf_states15_6.25$cycle
+plot61<-ggplot(data=lf_states15)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot62<-ggplot(data=lf_states15)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot61, plot62,ncol = 1,align = 'v')
+```
+
+#ILLINOIS
+```{r}
+lf_states17 <- filter(lf_states, Year != 2019, State == 17, early == 0)
+lf_states17_6.25 <- hpfilter(lf_states17$lEmp , freq = 6.25,type = "lambda")
+lf_states17$Emp_T6.25 <- lf_states17_6.25$trend
+lf_states17$Emp_C6.25 <- lf_states17_6.25$cycle
+plot63<-ggplot(data=lf_states17)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot64<-ggplot(data=lf_states17)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot63, plot64,ncol = 1,align = 'v')
+```
+
+#KANSAS
+```{r}
+lf_states20 <- filter(lf_states, Year != 2019, State == 20, early == 0)
+lf_states20_6.25 <- hpfilter(lf_states20$lEmp , freq = 6.25,type = "lambda")
+lf_states20$Emp_T6.25 <- lf_states20_6.25$trend
+lf_states20$Emp_C6.25 <- lf_states20_6.25$cycle
+plot65<-ggplot(data=lf_states20)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot66<-ggplot(data=lf_states20)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot65, plot66,ncol = 1,align = 'v')
+```
+
+#KENTUCKY
+```{r}
+lf_states21 <- filter(lf_states, Year != 2019, State == 21, early == 0)
+lf_states21_6.25 <- hpfilter(lf_states21$lEmp , freq = 6.25,type = "lambda")
+lf_states21$Emp_T6.25 <- lf_states21_6.25$trend
+lf_states21$Emp_C6.25 <- lf_states21_6.25$cycle
+plot67<-ggplot(data=lf_states21)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot68<-ggplot(data=lf_states21)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot67, plot68,ncol = 1,align = 'v')
+```
+
+#LOUISIANA
+```{r}
+lf_states22 <- filter(lf_states, Year != 2019, State == 22, early == 0)
+lf_states22_6.25 <- hpfilter(lf_states22$lEmp , freq = 6.25,type = "lambda")
+lf_states22$Emp_T6.25 <- lf_states22_6.25$trend
+lf_states22$Emp_C6.25 <- lf_states22_6.25$cycle
+plot69<-ggplot(data=lf_states22)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot70<-ggplot(data=lf_states22)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot69, plot70,ncol = 1,align = 'v')
+```
+
+#MAINE
+```{r}
+lf_states23 <- filter(lf_states, Year != 2019, State == 23, early == 0)
+lf_states23_6.25 <- hpfilter(lf_states23$lEmp , freq = 6.25,type = "lambda")
+lf_states23$Emp_T6.25 <- lf_states23_6.25$trend
+lf_states23$Emp_C6.25 <- lf_states23_6.25$cycle
+plot71<-ggplot(data=lf_states23)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot72<-ggplot(data=lf_states23)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot71, plot72,ncol = 1,align = 'v')
+```
+
+#MASSACHUSETTS
+```{r}
+lf_states25 <- filter(lf_states, Year != 2019, State == 25, early == 0)
+lf_states25_6.25 <- hpfilter(lf_states25$lEmp , freq = 6.25,type = "lambda")
+lf_states25$Emp_T6.25 <- lf_states25_6.25$trend
+lf_states25$Emp_C6.25 <- lf_states25_6.25$cycle
+plot73<-ggplot(data=lf_states25)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot74<-ggplot(data=lf_states25)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot73, plot74,ncol = 1,align = 'v')
+```
+
+#MICHIGAN
+```{r}
+lf_states26 <- filter(lf_states, Year != 2019, State == 26, early == 0)
+lf_states26_6.25 <- hpfilter(lf_states26$lEmp , freq = 6.25,type = "lambda")
+lf_states26$Emp_T6.25 <- lf_states26_6.25$trend
+lf_states26$Emp_C6.25 <- lf_states26_6.25$cycle
+plot75<-ggplot(data=lf_states26)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot76<-ggplot(data=lf_states26)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot75, plot76,ncol = 1,align = 'v')
+```
+
+#MINNESOTA
+```{r}
+lf_states27 <- filter(lf_states, Year != 2019, State == 27, early == 0)
+lf_states27_6.25 <- hpfilter(lf_states27$lEmp , freq = 6.25,type = "lambda")
+lf_states27$Emp_T6.25 <- lf_states27_6.25$trend
+lf_states27$Emp_C6.25 <- lf_states27_6.25$cycle
+plot77<-ggplot(data=lf_states27)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot78<-ggplot(data=lf_states27)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot77, plot78,ncol = 1,align = 'v')
+```
+
+#NEVADA
+```{r}
+lf_states32 <- filter(lf_states, Year != 2019, State == 32, early == 0)
+lf_states32_6.25 <- hpfilter(lf_states32$lEmp , freq = 6.25,type = "lambda")
+lf_states32$Emp_T6.25 <- lf_states32_6.25$trend
+lf_states32$Emp_C6.25 <- lf_states32_6.25$cycle
+plot79<-ggplot(data=lf_states32)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot80<-ggplot(data=lf_states32)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot79, plot80,ncol = 1,align = 'v')
+```
+
+#NEW JERSEY
+```{r}
+lf_states34 <- filter(lf_states, Year != 2019, State == 34, early == 0)
+lf_states34_6.25 <- hpfilter(lf_states34$lEmp , freq = 6.25,type = "lambda")
+lf_states34$Emp_T6.25 <- lf_states34_6.25$trend
+lf_states34$Emp_C6.25 <- lf_states34_6.25$cycle
+plot81<-ggplot(data=lf_states34)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot82<-ggplot(data=lf_states34)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot81, plot82,ncol = 1,align = 'v')
+```
+
+#NEW MEXICO
+```{r}
+lf_states35 <- filter(lf_states, Year != 2019, State == 35, early == 0)
+lf_states35_6.25 <- hpfilter(lf_states35$lEmp , freq = 6.25,type = "lambda")
+lf_states35$Emp_T6.25 <- lf_states35_6.25$trend
+lf_states35$Emp_C6.25 <- lf_states35_6.25$cycle
+plot83<-ggplot(data=lf_states35)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot84<-ggplot(data=lf_states35)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot83, plot84,ncol = 1,align = 'v')
+```
+
+#NEW YORK
+```{r}
+lf_states36 <- filter(lf_states, Year != 2019, State == 36, early == 0)
+lf_states36_6.25 <- hpfilter(lf_states36$lEmp , freq = 6.25,type = "lambda")
+lf_states36$Emp_T6.25 <- lf_states36_6.25$trend
+lf_states36$Emp_C6.25 <- lf_states36_6.25$cycle
+plot85<-ggplot(data=lf_states36)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot86<-ggplot(data=lf_states36)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot85, plot86,ncol = 1,align = 'v')
+```
+
+
+#NORTH CAROLINA
+```{r}
+lf_states37 <- filter(lf_states, Year != 2019, State == 37, early == 0)
+lf_states37_6.25 <- hpfilter(lf_states37$lEmp , freq = 6.25,type = "lambda")
+lf_states37$Emp_T6.25 <- lf_states37_6.25$trend
+lf_states37$Emp_C6.25 <- lf_states37_6.25$cycle
+plot87<-ggplot(data=lf_states37)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot88<-ggplot(data=lf_states37)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot87, plot88,ncol = 1,align = 'v')
+```
+
+#OREGON
+```{r}
+lf_states41 <- filter(lf_states, Year != 2019, State == 41, early == 0)
+lf_states41_6.25 <- hpfilter(lf_states41$lEmp , freq = 6.25,type = "lambda")
+lf_states41$Emp_T6.25 <- lf_states41_6.25$trend
+lf_states41$Emp_C6.25 <- lf_states41_6.25$cycle
+plot89<-ggplot(data=lf_states41)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot90<-ggplot(data=lf_states41)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot89, plot90,ncol = 1,align = 'v')
+```
+
+#PENNSYLVANIA
+```{r}
+lf_states42 <- filter(lf_states, Year != 2019, State == 42, early == 0)
+lf_states42_6.25 <- hpfilter(lf_states42$lEmp , freq = 6.25,type = "lambda")
+lf_states42$Emp_T6.25 <- lf_states42_6.25$trend
+lf_states42$Emp_C6.25 <- lf_states42_6.25$cycle
+plot91<-ggplot(data=lf_states42)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot92<-ggplot(data=lf_states42)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot91, plot92,ncol = 1,align = 'v')
+```
+
+#RHODE ISLAND
+```{r}
+lf_states44 <- filter(lf_states, Year != 2019, State == 44, early == 0)
+lf_states44_6.25 <- hpfilter(lf_states44$lEmp , freq = 6.25,type = "lambda")
+lf_states44$Emp_T6.25 <- lf_states44_6.25$trend
+lf_states44$Emp_C6.25 <- lf_states44_6.25$cycle
+plot93<-ggplot(data=lf_states44)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot94<-ggplot(data=lf_states44)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot93, plot94,ncol = 1,align = 'v')
+```
+
+#VERMONT
+```{r}
+lf_states50 <- filter(lf_states, Year != 2019, State == 50, early == 0)
+lf_states50_6.25 <- hpfilter(lf_states50$lEmp , freq = 6.25,type = "lambda")
+lf_states50$Emp_T6.25 <- lf_states50_6.25$trend
+lf_states50$Emp_C6.25 <- lf_states50_6.25$cycle
+plot95<-ggplot(data=lf_states50)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot96<-ggplot(data=lf_states50)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot95, plot96,ncol = 1,align = 'v')
+```
+
+#VIRGINIA
+```{r}
+lf_states51 <- filter(lf_states, Year != 2019, State == 51, early == 0)
+lf_states51_6.25 <- hpfilter(lf_states51$lEmp , freq = 6.25,type = "lambda")
+lf_states51$Emp_T6.25 <- lf_states51_6.25$trend
+lf_states51$Emp_C6.25 <- lf_states51_6.25$cycle
+plot97<-ggplot(data=lf_states51)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot98<-ggplot(data=lf_states51)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot97, plot98,ncol = 1,align = 'v')
+```
+
+#WASHINGTON
+```{r}
+lf_states53 <- filter(lf_states, Year != 2019, State == 53, early == 0)
+lf_states53_6.25 <- hpfilter(lf_states53$lEmp , freq = 6.25,type = "lambda")
+lf_states53$Emp_T6.25 <- lf_states53_6.25$trend
+lf_states53$Emp_C6.25 <- lf_states53_6.25$cycle
+plot99<-ggplot(data=lf_states53)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot100<-ggplot(data=lf_states53)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot99, plot100,ncol = 1,align = 'v')
+```
+
+#WISCONSIN
+```{r}
+lf_states55 <- filter(lf_states, Year != 2019, State == 55, early == 0)
+lf_states55_6.25 <- hpfilter(lf_states55$lEmp , freq = 6.25,type = "lambda")
+lf_states55$Emp_T6.25 <- lf_states55_6.25$trend
+lf_states55$Emp_C6.25 <- lf_states55_6.25$cycle
+plot101<-ggplot(data=lf_states55)+ 
+geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot102<-ggplot(data=lf_states55)+ 
+geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot101, plot102,ncol = 1,align = 'v')
+```
+
+```{r}
+#count(new_lf, State)
+```
+
+
+```{r}
+#ggplot(new_lf,aes(x = Period, y = Employed, group = early, color = early)) +
+  #geom_line() +
+  #geom_point()
+  #scale_color_viridis_d()
+  #geom_vline(xintercept = 'Sep-21', linetype = "dashed")
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
