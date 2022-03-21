@@ -40,7 +40,7 @@ library(lfe)
 library(dplyr)
 
 ```
-
+#The first part of the project is to check the trend of employment, UI policy, and Covid related data. And I'm on employment data set.
 
 ```{r}
 project_path <- "C:/Users/85384/Desktop/Capstone" 
@@ -997,13 +997,184 @@ lf_states55$Emp_C6.25 <- lf_states55_6.25$cycle
 plot101<-ggplot(data=lf_states55)+ 
 geom_line(aes(x=Period,y=lEmp,color='Log Employed'),size=1.5) + geom_line(aes(x=Period,y=Emp_T6.25,color='Log Employed Secular'),linetype=2,size=1.5) +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed'='blue','Log Employed Secular'='red'))+ggtitle('Employed Trend')+theme(plot.title = element_text(hjust = 1))
 
-plot102<-ggplot(data=lf_states55)+ 
+plot102<-ggplot(data=lf_states55)+
 geom_line(aes(x=Period,y=Emp_C6.25,color='Log Employed Cycle'),size=1.5,linetype=2)  +xlab("Period")+ylab("")+scale_colour_manual(name="",values=c('Log Employed Cycle'='blue'))+ggtitle('Employed Cycle')+theme(plot.title = element_text(hjust = 1))
 ```
 
 ```{r}
 plot_grid(plot101, plot102,ncol = 1,align = 'v')
 ```
+
+
+#After the disscussion we need some exploratory analysis, so we pick another data set that has other Policy in it.
+#"COVID-19 US state policy database 3_3_2022"is the data set with all policies implemented over 50 states.
+#And "Combined" is the cleaned data set I used above, I export the data set for convenience.
+```{r}
+project_path <- "C:/Users/85384/Desktop/Capstone/GitHub/Capstone_4th_Economy" 
+setwd(project_path)
+sp <- read_excel("COVID-19 US state policy database 3_3_2022.xlsx")
+
+project_path <- "C:/Users/85384/Desktop/Capstone/GitHub/Capstone_4th_Economy" 
+setwd(project_path)
+Combined <- read.csv("Combined.csv")
+
+```
+
+```{r}
+View(sp)
+#View(Combined)
+```
+
+```{r}
+Combined[is.na(Combined)] <- 0
+View(Combined)
+```
+
+#Set up the dummy variable for the states moratorium on evictions now and let those states equal 1
+```{r}
+Combined$EMStatus <- ifelse(Combined$FIPS %in% c('6','9','11','15','17','24','25','27','34','35','36','37','41','50','53'),1,0)
+View(Combined)
+```
+
+#pick year 2020
+```{r}
+Combined20 <- filter(Combined, Year == 2020, Month >= 2, Month <= 8)
+View(Combined20)
+```
+
+```{r}
+count(Combined20, State)
+```
+
+```{r}
+Prep <- Combined20 %>% group_by(FIPS, Month, State, CLDAYCR) %>%
+    summarise(Emp = sum(Total.E),Claims = sum(InitialClaims),Case = sum(case_count),Death = sum(death_count),Vaccine = sum(fullvaccine_count),Hospitalized = sum(hospitalized_count))
+View(Prep)
+```
+
+```{r}
+head(Prep)
+print(Prep)
+str(Prep)
+```
+
+
+
+```{r}
+#cldaycr <- filter(Prep, CLDAYCR == 1)
+cldaycr <- Prep[c(1:7,50:56,92:98,120:126,141:147,148:161,211:217,246:252,260:280,337:343,351:357),]
+#states never closed day care
+ncl <- Prep[-c(1:7,50:56,92:98,120:126,141:147,148:161,211:217,246:252,260:280,337:343,351:357),]
+view(cldaycr)
+View(ncl)
+count(cldaycr,Month)
+```
+
+
+
+```{r}
+cldaycr <- cldaycr[,-c(3)]
+```
+
+
+```{r}
+
+cldaycr3 <- filter(cldaycr, Month == 3)
+cldaycr4 <- filter(cldaycr, Month == 4)
+cldaycr5 <- filter(cldaycr, Month == 5)
+cldaycr6 <- filter(cldaycr, Month == 6)
+colMeans(cldaycr3,na.rm=TRUE)
+colMeans(cldaycr4,na.rm=TRUE)
+colMeans(cldaycr5,na.rm=TRUE)
+colMeans(cldaycr6,na.rm=TRUE)
+```
+```{r}
+ncl <- ncl[,-c(3)]
+```
+
+
+```{r}
+
+ncl3 <- filter(ncl, Month == 3)
+ncl4 <- filter(ncl, Month == 4)
+ncl5 <- filter(ncl, Month == 5)
+ncl6 <- filter(ncl, Month == 6)
+colMeans(ncl3,na.rm=TRUE)
+colMeans(ncl4,na.rm=TRUE)
+colMeans(ncl5,na.rm=TRUE)
+colMeans(ncl6,na.rm=TRUE)
+```
+
+```{r}
+df <- data.frame (Period = c("2020/3/15","2020/4/15","2020/5/15","2020/6/15"),
+                  Emp1  = c("3002929.7142857", "2506246.429 ", "2620765.2142857","2703665.1428571"),
+                  Emp2 = c("3090687.94595", "2674748.32432", "2730316.13514","2816985.45946"),
+                  Claims1 = c("277984.5714286","23370.714","137682.7857143 ","102168.4285714"),
+                  Claims2 = c("210079.83784","341464.59459","194966.16216","139682.40541 "),
+                  Case1 = c("2269.7857143","23370.714","20105.5714286","10624.4285714"),
+                  Case2 = c("2519.86486","14582.27027","12305","17254.83784"),
+                  Death1 = c("36.4285714","1365.429","1510.9285714","785.3571429"),
+                  Death2 = c("52.45946","951.08108","632.24324","343.48649"),
+                  Hospitalized1 = c("341.4285714","26905.571","40332.3571429","24688.2857143"),
+                  Hospitalized2 = c("794.24324","25969.86486","28373.72973","25056.94595"))
+df$Period <- as.Date(df$Period)
+df$Emp1 <- as.numeric(df$Emp1)
+df$Emp2 <- as.numeric(df$Emp2)
+df$Claims1 <- as.numeric(df$Claims1)
+df$Claims2 <- as.numeric(df$Claims2)
+df$Case1 <- as.numeric(df$Case1)
+df$Case2 <- as.numeric(df$Case2)
+df$Death1 <- as.numeric(df$Death1)
+df$Death2 <- as.numeric(df$Death2)
+df$Hospitalized1 <- as.numeric(df$Hospitalized1)
+df$Hospitalized2 <- as.numeric(df$Hospitalized2)
+View(df)
+```
+
+
+```{r}
+plot103<-ggplot(data=df)+ 
+geom_line(aes(x=Period,y=Emp1,color='States closed day care'),size=1.5) + geom_line(aes(x=Period,y=Emp2,color='States did not close day care'),size=1.5) +xlab("Month")+ylab("Average of Employment")+scale_colour_manual(name="",values=c('States closed day care'='blue','States did not close day care'='red'))+ggtitle('Closed Day Care vs. Open Day Care 2020')+theme(plot.title = element_text(hjust = 1))
+
+plot_grid(plot103,ncol = 1,align = 'v')
+```
+
+```{r}
+plot104<-ggplot(data=df)+ 
+geom_line(aes(x=Period,y=Claims1,color='States closed day care'),size=1.5) + geom_line(aes(x=Period,y=Claims2,color='States did not close day care'),size=1.5) +xlab("Month")+ylab("Average of UI Claims")+scale_colour_manual(name="",values=c('States closed day care'='blue','States did not close day care'='red'))+ggtitle('Closed Day Care vs. Open Day Care 2020')+theme(plot.title = element_text(hjust = 1))
+
+plot_grid(plot104,ncol = 1,align = 'v')
+```
+
+
+```{r}
+plot105<-ggplot(data=df)+ 
+geom_line(aes(x=Period,y=Case1,color='States closed day care'),size=1.5) + geom_line(aes(x=Period,y=Case2,color='States did not close day care'),size=1.5) +xlab("Month")+ylab("Average of COVID Cases")+scale_colour_manual(name="",values=c('States closed day care'='blue','States did not close day care'='red'))+ggtitle('Closed Day Care vs. Open Day Care 2020')+theme(plot.title = element_text(hjust = 1))
+
+plot_grid(plot105,ncol = 1,align = 'v')
+```
+
+```{r}
+plot106<-ggplot(data=df)+ 
+geom_line(aes(x=Period,y=Death1,color='States closed day care'),size=1.5) + geom_line(aes(x=Period,y=Death2,color='States did not close day care'),size=1.5) +xlab("Month")+ylab("Average of Death Count")+scale_colour_manual(name="",values=c('States closed day care'='blue','States did not close day care'='red'))+ggtitle('Closed Day Care vs. Open Day Care 2020')+theme(plot.title = element_text(hjust = 1))
+
+plot_grid(plot106,ncol = 1,align = 'v')
+
+```
+
+```{r}
+plot107<-ggplot(data=df)+ 
+geom_line(aes(x=Period,y=Hospitalized1,color='States closed day care'),size=1.5) + geom_line(aes(x=Period,y=Hospitalized2,color='States did not close day care'),size=1.5) +xlab("Month")+ylab("Average of Hospitalized Count")+scale_colour_manual(name="",values=c('States closed day care'='blue','States did not close day care'='red'))+ggtitle('Closed Day Care vs. Open Day Care 2020')+theme(plot.title = element_text(hjust = 1))
+
+plot_grid(plot107,ncol = 1,align = 'v')
+```
+
+
+
+
+
+
+
 
 ```{r}
 #count(new_lf, State)
