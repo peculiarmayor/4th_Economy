@@ -1,0 +1,1200 @@
+---
+title: "ui_trend"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(mFilter) #Package used for hp filter
+library(cowplot) #Allows for side by side graphs
+library(ggplot2)
+library(reshape2)
+library(stargazer)
+library(kableExtra)
+library(cowplot)
+library(stringr)
+library(haven)
+ui <- read_csv("C:/Users/user/Desktop/4th Economy/data/ui.csv")
+```
+
+```{r}
+#ui_StateFips[] <- lapply(ui_StateFips, function(x)
+#type.convert(as.character(x),as.is = TRUE))
+#str(ui_StateFips)
+ui_StateFips <- ui
+ui_StateFips <- filter(ui_StateFips)
+ui_StateFips$FiledWeekEnded <- as.Date(ui_StateFips$FiledWeekEnded,"%m/%d/%Y")
+class(ui_StateFips$FiledWeekEnded)
+ui$early <- ifelse(ui$StateFips %in% c('1','2','4','5','12','13','16','18','19','24','28','29','30','31','33','38','39','40','46','45','47','48','49','54','56'),1,0)
+ui$ContinuedClaims <- as.numeric(ui$ContinuedClaims)
+#View(ui)
+class(ui$ContinuedClaims)
+is.data.frame(ui)
+is.numeric(ui)
+str(ui)
+```
+```{r}
+
+```
+```{r}
+#ui_StateFips <- ui
+#ui_StateFips <- filter(ui_StateFips)
+#ui_StateFips$FiledWeekEnded <- #as.Date(ui_StateFips$FiledWeekEnded,"%m/%d/%Y")
+#class(ui_StateFips$FiledWeekEnded)
+```
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+```{r}
+#ui_StateFips[] <- lapply(ui_StateFips, function(x)
+#type.convert(as.character(x),as.is = TRUE))
+#str(ui_StateFips)
+```
+
+```{r}
+#Alabama ended the UI benefits on 19 June 2021
+# The trend line shows that UI claims fell when the state stopped the UI benefits and UI claims are now below the pre-pandemic period as at 31 December 2021
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new1 <- filter(ui_new, Year > 2019, StateFips == 1)
+ui_new1_6.25 <- hpfilter(ui_new1$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new1$ContinuedClaims_T6.25 <- ui_new1_6.25$trend
+ui_new1$ContinuedClaims_C6.25 <- ui_new1_6.25$cycle
+plot1<-ggplot(data=ui_new1,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot2<-ggplot(data=ui_new1)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+
+plot_grid(plot1, plot2,ncol = 1,align = 'v')
+```
+```{r}
+#Alaska ended the UI benefits on 12 June 2021
+#The secular trend shows that UI benefits in Alaska was oscillating on and down before covid period, fell after the state ended the UI benefits in June 2021 but claims increased again towards the end of 2021
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new2 <- filter(ui_new, Year > 2019, StateFips == 2)
+ui_new2_6.25 <- hpfilter(ui_new2$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new2$ContinuedClaims_T6.25 <- ui_new2_6.25$trend
+ui_new2$ContinuedClaims_C6.25 <- ui_new2_6.25$cycle
+plot3<-ggplot(data=ui_new2,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot4<-ggplot(data=ui_new2)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot3, plot4,ncol = 1,align = 'v')
+```
+```{r}
+#Arizona ended the UI benefits on 10 July 2021
+#UI claims secular trend shows that claims fell before the pandemic period then rose during the pandemic period and fell again when the state ended UI benefits and UI claims are now below the pre-pandemic period. 
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new4 <- filter(ui_new, Year > 2019, StateFips == 4)
+ui_new4_6.25 <- hpfilter(ui_new4$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new4$ContinuedClaims_T6.25 <- ui_new4_6.25$trend
+ui_new4$ContinuedClaims_C6.25 <- ui_new4_6.25$cycle
+plot5<-ggplot(data=ui_new4,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot6<-ggplot(data=ui_new4)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot5, plot6,ncol = 1,align = 'v')
+```
+```{r}
+#Arkansas ended the UI benefits on 26 June 2021
+#The UI secular trend line shows that UI claims are almost at pre-COVID 19 period level in Arkansas
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new5 <- filter(ui_new, Year > 2019, StateFips == 5)
+ui_new5_6.25 <- hpfilter(ui_new5$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new5$ContinuedClaims_T6.25 <- ui_new5_6.25$trend
+ui_new5$ContinuedClaims_C6.25 <- ui_new5_6.25$cycle
+plot7<-ggplot(data=ui_new5,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot8<-ggplot(data=ui_new5)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot7, plot8,ncol = 1,align = 'v')
+```
+```{r}
+#California ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims are slightly above the pre-pandemic period as at 31 December 2021
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new6 <- filter(ui_new, Year > 2019, StateFips == 6)
+ui_new6_6.25 <- hpfilter(ui_new6$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new6$ContinuedClaims_T6.25 <- ui_new6_6.25$trend
+ui_new6$ContinuedClaims_C6.25 <- ui_new6_6.25$cycle
+plot9<-ggplot(data=ui_new6,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot10<-ggplot(data=ui_new6)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot9, plot10,ncol = 1,align = 'v')
+```
+
+```{r}
+#Colorado ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims are slightly above the pre-pandemic period as at 31 December 2021
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new8 <- filter(ui_new, Year > 2019, StateFips == 8)
+ui_new8_6.25 <- hpfilter(ui_new8$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new8$ContinuedClaims_T6.25 <- ui_new8_6.25$trend
+ui_new8$ContinuedClaims_C6.25 <- ui_new8_6.25$cycle
+plot11<-ggplot(data=ui_new8,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot12<-ggplot(data=ui_new8)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot11, plot12,ncol = 1,align = 'v')
+```
+```{r}
+#Connecticut ended the UI benefits on 6 January 2022
+#The secular trend shows that UI claims are slightly below the pre-pandemic period as at 31 December 2021
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new9 <- filter(ui_new, Year > 2019, StateFips == 9)
+ui_new9_6.25 <- hpfilter(ui_new9$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new9$ContinuedClaims_T6.25 <- ui_new9_6.25$trend
+ui_new9$ContinuedClaims_C6.25 <- ui_new9_6.25$cycle
+plot13<-ggplot(data=ui_new9,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot14<-ggplot(data=ui_new9)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot13, plot14,ncol = 1,align = 'v')
+```
+```{r}
+#Delaware ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims are slightly below the pre-pandemic period as at 31 December 2021
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new10 <- filter(ui_new, Year > 2019, StateFips == 10)
+ui_new10_6.25 <- hpfilter(ui_new10$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new10$ContinuedClaims_T6.25 <- ui_new10_6.25$trend
+ui_new10$ContinuedClaims_C6.25 <- ui_new10_6.25$cycle
+plot15<-ggplot(data=ui_new10,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot16<-ggplot(data=ui_new10)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot15, plot16,ncol = 1,align = 'v')
+```
+```{r}
+#Florida ended the UI benefits on 26 June 2021
+#The secular trend shows that UI claims are above the pre-pandemic period as at 31 December 2021. UI claims were low before the pandemic period. The fact that UI claims are still above the pre-pandemic period shows that the employment rate is yet to return to the pre-pandemic period's level in the state
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new12 <- filter(ui_new, Year > 2019, StateFips == 12)
+ui_new12_6.25 <- hpfilter(ui_new12$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new12$ContinuedClaims_T6.25 <- ui_new12_6.25$trend
+ui_new12$ContinuedClaims_C6.25 <- ui_new12_6.25$cycle
+plot17<-ggplot(data=ui_new12,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot18<-ggplot(data=ui_new12)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot17, plot18,ncol = 1,align = 'v')
+```
+```{r}
+#Georgia ended the UI benefits on 26 June 2021
+#The secular trend shows that UI claims are above the pre-pandemic period as at 31 December 2021. UI claims were low before the pandemic period. The fact that UI claims are still above the pre-pandemic period shows that the employment rate is yet to return to the pre-pandemic period's level in the state
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new13 <- filter(ui_new, Year > 2019, StateFips == 13)
+ui_new13_6.25 <- hpfilter(ui_new13$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new13$ContinuedClaims_T6.25 <- ui_new13_6.25$trend
+ui_new13$ContinuedClaims_C6.25 <- ui_new13_6.25$cycle
+plot19<-ggplot(data=ui_new13,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot20<-ggplot(data=ui_new13)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot19, plot20,ncol = 1,align = 'v')
+```
+```{r}
+#Hawaii ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims are above the pre-pandemic period as at 31 December 2021. UI claims were low before the pandemic period. The fact that UI claims are still above the pre-pandemic period shows that the employment rate is yet to return to the pre-pandemic period's level in the state
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new15 <- filter(ui_new, Year > 2019, StateFips == 15)
+ui_new15_6.25 <- hpfilter(ui_new15$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new15$ContinuedClaims_T6.25 <- ui_new15_6.25$trend
+ui_new15$ContinuedClaims_C6.25 <- ui_new15_6.25$cycle
+plot21<-ggplot(data=ui_new15,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot22<-ggplot(data=ui_new15)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot21, plot22,ncol = 1,align = 'v')
+```
+```{r}
+#Idaho ended the UI benefits on 19 June 2021
+#The secular trend shows that UI claims fell and rose in 2021 and is on the increase as at 31 December 2021. This movement is similar to the pre-pandemic trend.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new16 <- filter(ui_new, Year > 2019, StateFips == 16)
+ui_new16_6.25 <- hpfilter(ui_new16$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new16$ContinuedClaims_T6.25 <- ui_new16_6.25$trend
+ui_new16$ContinuedClaims_C6.25 <- ui_new16_6.25$cycle
+plot23<-ggplot(data=ui_new16,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot24<-ggplot(data=ui_new16)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot23, plot24,ncol = 1,align = 'v')
+```
+```{r}
+#Illinois ended the UI benefits on 4 September 2021
+#The secular trend shows UI claims has been falling since 2020 but it is still above the pre-pandemic trend as at 31 December 2021. 
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new17 <- filter(ui_new, Year > 2019, StateFips == 17)
+ui_new17_6.25 <- hpfilter(ui_new17$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new17$ContinuedClaims_T6.25 <- ui_new17_6.25$trend
+ui_new17$ContinuedClaims_C6.25 <- ui_new17_6.25$cycle
+plot25<-ggplot(data=ui_new17,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot26<-ggplot(data=ui_new17)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot25, plot26,ncol = 1,align = 'v')
+```
+```{r}
+#Indiana ended the UI benefits on 19 July 2021
+#The secular trend shows UI claims has been falling since 2020 but it is still above the pre-pandemic trend as at 31 December 2021. 
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new18 <- filter(ui_new, Year > 2019, StateFips == 18)
+ui_new18_6.25 <- hpfilter(ui_new18$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new18$ContinuedClaims_T6.25 <- ui_new18_6.25$trend
+ui_new18$ContinuedClaims_C6.25 <- ui_new18_6.25$cycle
+plot27<-ggplot(data=ui_new18,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot28<-ggplot(data=ui_new18)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot27, plot28,ncol = 1,align = 'v')
+```
+```{r}
+#Iowa ended the UI benefits on 12 June 2021
+#The secular trend shows that UI claims fell and rose in 2021 and is on the increase as at 31 December 2021. This movement is similar to the pre-pandemic trend.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new19 <- filter(ui_new, Year > 2019, StateFips == 19)
+ui_new19_6.25 <- hpfilter(ui_new19$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new19$ContinuedClaims_T6.25 <- ui_new19_6.25$trend
+ui_new19$ContinuedClaims_C6.25 <- ui_new19_6.25$cycle
+plot29<-ggplot(data=ui_new19,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot30<-ggplot(data=ui_new19)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot29, plot30,ncol = 1,align = 'v')
+```
+```{r}
+#Kansas ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims fell and rose in in 2020 and 2021 and is now below the pre-pandemic trend as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new20 <- filter(ui_new, Year > 2019, StateFips == 20)
+ui_new20_6.25 <- hpfilter(ui_new20$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new20$ContinuedClaims_T6.25 <- ui_new20_6.25$trend
+ui_new20$ContinuedClaims_C6.25 <- ui_new20_6.25$cycle
+plot31<-ggplot(data=ui_new20,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot32<-ggplot(data=ui_new20)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot31, plot32,ncol = 1,align = 'v')
+```
+```{r}
+#Kentucky ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims has been falling since 2020 and is below the pre-pandemic trend as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new21 <- filter(ui_new, Year > 2019, StateFips == 21)
+ui_new21_6.25 <- hpfilter(ui_new21$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new21$ContinuedClaims_T6.25 <- ui_new21_6.25$trend
+ui_new21$ContinuedClaims_C6.25 <- ui_new21_6.25$cycle
+plot33<-ggplot(data=ui_new21,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot34<-ggplot(data=ui_new21)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot33, plot34,ncol = 1,align = 'v')
+```
+```{r}
+#Louisiana ended the UI benefits on 31 July 2021
+#The secular trend shows that UI claims has been falling since 2020 but it is above the pre-pandemic trend as at 31 December 2021. This may be because the state had low UI claims prior to the pandemic period. This implies that the state's economy and employment rate are yet to return to pre-pandemic levels.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new22 <- filter(ui_new, Year > 2019, StateFips == 22)
+ui_new22_6.25 <- hpfilter(ui_new22$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new22$ContinuedClaims_T6.25 <- ui_new22_6.25$trend
+ui_new22$ContinuedClaims_C6.25 <- ui_new22_6.25$cycle
+plot35<-ggplot(data=ui_new22,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot36<-ggplot(data=ui_new22)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot35, plot36,ncol = 1,align = 'v')
+```
+```{r}
+#Maine ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims has been falling since 2020 but it was above the pre-pandemic trend as at 31 December 2021. 
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new23 <- filter(ui_new, Year > 2019, StateFips == 23)
+ui_new23_6.25 <- hpfilter(ui_new23$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new23$ContinuedClaims_T6.25 <- ui_new23_6.25$trend
+ui_new23$ContinuedClaims_C6.25 <- ui_new23_6.25$cycle
+plot37<-ggplot(data=ui_new23,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot38<-ggplot(data=ui_new23)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot37, plot38,ncol = 1,align = 'v')
+```
+
+```{r}
+#Maryland ended the UI benefits on 3 July 2021
+#The secular trend shows that UI claims has been falling since 2020 but it was still slightly above the pre-pandemic trend as at 31 December 2021. 
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new24 <- filter(ui_new, Year > 2019, StateFips == 24)
+ui_new24_6.25 <- hpfilter(ui_new24$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new24$ContinuedClaims_T6.25 <- ui_new24_6.25$trend
+ui_new24$ContinuedClaims_C6.25 <- ui_new24_6.25$cycle
+plot39<-ggplot(data=ui_new24,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot40<-ggplot(data=ui_new24)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot39, plot40,ncol = 1,align = 'v')
+```
+
+```{r}
+#Massachusetts ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims has been falling since 2020 but it was still slightly above the pre-pandemic trend as at 31 December 2021. 
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new25 <- filter(ui_new, Year > 2019, StateFips == 25)
+ui_new25_6.25 <- hpfilter(ui_new25$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new25$ContinuedClaims_T6.25 <- ui_new25_6.25$trend
+ui_new25$ContinuedClaims_C6.25 <- ui_new25_6.25$cycle
+plot41<-ggplot(data=ui_new25,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot42<-ggplot(data=ui_new25)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot41, plot42,ncol = 1,align = 'v')
+```
+
+```{r}
+#Michigan ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims has been falling since 2020 but it was still above the pre-pandemic trend as at 31 December 2021. The UI claims was oscillating prior to the pandemic period.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new26 <- filter(ui_new, Year > 2019, StateFips == 26)
+ui_new26_6.25 <- hpfilter(ui_new26$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new26$ContinuedClaims_T6.25 <- ui_new26_6.25$trend
+ui_new26$ContinuedClaims_C6.25 <- ui_new26_6.25$cycle
+plot43<-ggplot(data=ui_new26,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot44<-ggplot(data=ui_new26)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot43, plot44,ncol = 1,align = 'v')
+```
+
+```{r}
+#Minnesota ended the UI benefits on 4 September 2021
+#The secular trend shows that UI claims has been falling since 2020 but it was still above the pre-pandemic trend as at 31 December 2021. The UI claims was oscillating prior to the pandemic period.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new27 <- filter(ui_new, Year > 2019, StateFips == 27)
+ui_new27_6.25 <- hpfilter(ui_new27$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new27$ContinuedClaims_T6.25 <- ui_new27_6.25$trend
+ui_new27$ContinuedClaims_C6.25 <- ui_new27_6.25$cycle
+plot45<-ggplot(data=ui_new27,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot46<-ggplot(data=ui_new27)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot45, plot46,ncol = 1,align = 'v')
+```
+
+```{r}
+#Mississippi ended the UI benefits on 12 June 2021
+#The secular trend shows that UI claims has been falling since 2020 and it was slightly below the pre-pandemic trend as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new28 <- filter(ui_new, Year > 2019, StateFips == 28)
+ui_new28_6.25 <- hpfilter(ui_new28$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new28$ContinuedClaims_T6.25 <- ui_new28_6.25$trend
+ui_new28$ContinuedClaims_C6.25 <- ui_new28_6.25$cycle
+plot47<-ggplot(data=ui_new28,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot48<-ggplot(data=ui_new28)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot47, plot48,ncol = 1,align = 'v')
+```
+
+```{r}
+#Missouri ended the UI benefits on 12 June 2021
+#The secular trend shows that UI claims has been falling since 2020 and it was slightly below the pre-pandemic trend as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new29 <- filter(ui_new, Year > 2019, StateFips == 29)
+ui_new29_6.25 <- hpfilter(ui_new29$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new29$ContinuedClaims_T6.25 <- ui_new29_6.25$trend
+ui_new29$ContinuedClaims_C6.25 <- ui_new29_6.25$cycle
+plot49<-ggplot(data=ui_new29,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot50<-ggplot(data=ui_new29)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot49, plot50,ncol = 1,align = 'v')
+```
+
+```{r}
+#Montana ended the UI benefits on 27 June 2021
+#The secular trend shows that UI claims has been falling since 2020 but started rising again towards the end of 2021 was slightly above the pre-pandemic trend as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new30 <- filter(ui_new, Year > 2019, StateFips == 30)
+ui_new30_6.25 <- hpfilter(ui_new30$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new30$ContinuedClaims_T6.25 <- ui_new30_6.25$trend
+ui_new30$ContinuedClaims_C6.25 <- ui_new30_6.25$cycle
+plot51<-ggplot(data=ui_new30,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot52<-ggplot(data=ui_new30)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot51, plot52,ncol = 1,align = 'v')
+```
+
+```{r}
+#Nebraska ended the UI benefits on 19 June 2021
+#The secular trend shows that UI claims fell for most part of 2019 but rose towards the end of 2019 and middle of 2020. UI claims have been falling since around the middle of 2020 but still above the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new31 <- filter(ui_new, Year > 2019, StateFips == 31)
+ui_new31_6.25 <- hpfilter(ui_new31$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new31$ContinuedClaims_T6.25 <- ui_new31_6.25$trend
+ui_new31$ContinuedClaims_C6.25 <- ui_new31_6.25$cycle
+plot53<-ggplot(data=ui_new31,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot54<-ggplot(data=ui_new31)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot53, plot54,ncol = 1,align = 'v')
+```
+
+```{r}
+#Nevada ended the UI benefits on 4 September 2021
+#The secular trend shows that the state had low before the pandemic. As expected, UI claims rose in 2020 due to lockdown. UI claims have been falling since around the middle of 2020 but are still above the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new32 <- filter(ui_new, Year > 2019, StateFips == 32)
+ui_new32_6.25 <- hpfilter(ui_new32$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new32$ContinuedClaims_T6.25 <- ui_new32_6.25$trend
+ui_new32$ContinuedClaims_C6.25 <- ui_new32_6.25$cycle
+plot55<-ggplot(data=ui_new32,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot56<-ggplot(data=ui_new32)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot55, plot56,ncol = 1,align = 'v')
+```
+
+```{r}
+#New Hampshire ended the UI benefits on 19 June 2021
+#The secular trend shows that the state had oschilatting pre-pandemic UI claims. that the state had low before the pandemic. UI claims have been falling since 2020 and are slightly below the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new33 <- filter(ui_new, Year > 2019, StateFips == 33)
+ui_new33_6.25 <- hpfilter(ui_new33$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new33$ContinuedClaims_T6.25 <- ui_new33_6.25$trend
+ui_new33$ContinuedClaims_C6.25 <- ui_new33_6.25$cycle
+plot57<-ggplot(data=ui_new33,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot58<-ggplot(data=ui_new33)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot57, plot58,ncol = 1,align = 'v')
+```
+
+```{r}
+#New Jersey ended the UI benefits on 4 September 2021
+#The secular trend shows that the state had oschilatting pre-pandemic UI claims. UI claims have been falling since 2020 and are virtually at the same level with the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new34 <- filter(ui_new, Year > 2019, StateFips == 34)
+ui_new34_6.25 <- hpfilter(ui_new34$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new34$ContinuedClaims_T6.25 <- ui_new34_6.25$trend
+ui_new34$ContinuedClaims_C6.25 <- ui_new34_6.25$cycle
+plot59<-ggplot(data=ui_new34,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot60<-ggplot(data=ui_new34)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot59, plot60,ncol = 1,align = 'v')
+```
+
+```{r}
+#New Mexico ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims have been falling since 2020 but are still above the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new35 <- filter(ui_new, Year > 2019, StateFips == 35)
+ui_new35_6.25 <- hpfilter(ui_new35$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new35$ContinuedClaims_T6.25 <- ui_new35_6.25$trend
+ui_new35$ContinuedClaims_C6.25 <- ui_new35_6.25$cycle
+plot61<-ggplot(data=ui_new35,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot62<-ggplot(data=ui_new35)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot61, plot62,ncol = 1,align = 'v')
+```
+
+```{r}
+#New York ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims have been falling since 2020 but are still above the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new36 <- filter(ui_new, Year > 2019, StateFips == 36)
+ui_new36_6.25 <- hpfilter(ui_new36$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new36$ContinuedClaims_T6.25 <- ui_new36_6.25$trend
+ui_new36$ContinuedClaims_C6.25 <- ui_new36_6.25$cycle
+plot63<-ggplot(data=ui_new36,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot64<-ggplot(data=ui_new36)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot63, plot64,ncol = 1,align = 'v')
+```
+
+```{r}
+#North Carolina ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims have been falling since 2020 and were at the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new37 <- filter(ui_new, Year > 2019, StateFips == 37)
+ui_new37_6.25 <- hpfilter(ui_new37$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new37$ContinuedClaims_T6.25 <- ui_new37_6.25$trend
+ui_new37$ContinuedClaims_C6.25 <- ui_new37_6.25$cycle
+plot65<-ggplot(data=ui_new37,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot66<-ggplot(data=ui_new37)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot65, plot66,ncol = 1,align = 'v')
+```
+
+```{r}
+#North Dakota ended the UI benefits on 19 June 2021
+#The secular trend shows that the state had oscillating UI claims before and during the pandemic. UI fell and rose during 2020 and 2021 and was on upward trajectory towards as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new38 <- filter(ui_new, Year > 2019, StateFips == 38)
+ui_new38_6.25 <- hpfilter(ui_new38$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new38$ContinuedClaims_T6.25 <- ui_new38_6.25$trend
+ui_new38$ContinuedClaims_C6.25 <- ui_new38_6.25$cycle
+plot67<-ggplot(data=ui_new38,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot68<-ggplot(data=ui_new38)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot67, plot68,ncol = 1,align = 'v')
+```
+
+```{r}
+#North Dakota ended the UI benefits on 19 June 2021
+#The secular trend shows that the state had oscillating UI claims before and during the pandemic. UI fell and rose during 2020 and 2021 and was on upward trajectory towards as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new38 <- filter(ui_new, Year > 2019, StateFips == 38)
+ui_new38_6.25 <- hpfilter(ui_new38$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new38$ContinuedClaims_T6.25 <- ui_new38_6.25$trend
+ui_new38$ContinuedClaims_C6.25 <- ui_new38_6.25$cycle
+plot67<-ggplot(data=ui_new38,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot68<-ggplot(data=ui_new38)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot67, plot68,ncol = 1,align = 'v')
+```
+
+```{r}
+#Ohio ended the UI benefits on 19 June 2021
+#The secular trend shows that the state's UI claims rose and fell in 2020 and 2020 and was on pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new39 <- filter(ui_new, Year > 2019, StateFips == 39)
+ui_new39_6.25 <- hpfilter(ui_new39$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new39$ContinuedClaims_T6.25 <- ui_new39_6.25$trend
+ui_new39$ContinuedClaims_C6.25 <- ui_new39_6.25$cycle
+plot69<-ggplot(data=ui_new39,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot70<-ggplot(data=ui_new39)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot69, plot70,ncol = 1,align = 'v')
+```
+
+```{r}
+#Oklahoma ended the UI benefits on 26 June 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 and was at pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new40 <- filter(ui_new, Year > 2019, StateFips == 40)
+ui_new40_6.25 <- hpfilter(ui_new40$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new40$ContinuedClaims_T6.25 <- ui_new40_6.25$trend
+ui_new40$ContinuedClaims_C6.25 <- ui_new40_6.25$cycle
+plot71<-ggplot(data=ui_new40,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot72<-ggplot(data=ui_new40)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot71, plot72,ncol = 1,align = 'v')
+```
+
+```{r}
+#Oregon ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 and was slightly above the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new41 <- filter(ui_new, Year > 2019, StateFips == 41)
+ui_new41_6.25 <- hpfilter(ui_new41$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new41$ContinuedClaims_T6.25 <- ui_new41_6.25$trend
+ui_new41$ContinuedClaims_C6.25 <- ui_new41_6.25$cycle
+plot73<-ggplot(data=ui_new41,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot74<-ggplot(data=ui_new41)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot73, plot74,ncol = 1,align = 'v')
+```
+
+```{r}
+#Pennsylvania ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 and was at the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new42 <- filter(ui_new, Year > 2019, StateFips == 42)
+ui_new42_6.25 <- hpfilter(ui_new42$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new42$ContinuedClaims_T6.25 <- ui_new42_6.25$trend
+ui_new42$ContinuedClaims_C6.25 <- ui_new42_6.25$cycle
+plot75<-ggplot(data=ui_new42,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot76<-ggplot(data=ui_new42)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot75, plot76,ncol = 1,align = 'v')
+```
+
+```{r}
+#Rhode Island ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 and was above the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new44 <- filter(ui_new, Year > 2019, StateFips == 44)
+ui_new44_6.25 <- hpfilter(ui_new44$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new44$ContinuedClaims_T6.25 <- ui_new44_6.25$trend
+ui_new44$ContinuedClaims_C6.25 <- ui_new44_6.25$cycle
+plot77<-ggplot(data=ui_new44,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot78<-ggplot(data=ui_new44)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot77, plot78,ncol = 1,align = 'v')
+```
+
+```{r}
+#South Carolina ended the UI benefits on 26 June 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 and was below the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new45 <- filter(ui_new, Year > 2019, StateFips == 45)
+ui_new45_6.25 <- hpfilter(ui_new45$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new45$ContinuedClaims_T6.25 <- ui_new45_6.25$trend
+ui_new45$ContinuedClaims_C6.25 <- ui_new45_6.25$cycle
+plot79<-ggplot(data=ui_new45,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot80<-ggplot(data=ui_new45)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot79, plot80,ncol = 1,align = 'v')
+```
+
+```{r}
+#South Dakota ended the UI benefits on 26 June 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 and was rising and above the pre-pandemic period as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new46 <- filter(ui_new, Year > 2019, StateFips == 46)
+ui_new46_6.25 <- hpfilter(ui_new46$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new46$ContinuedClaims_T6.25 <- ui_new46_6.25$trend
+ui_new46$ContinuedClaims_C6.25 <- ui_new46_6.25$cycle
+plot81<-ggplot(data=ui_new46,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot82<-ggplot(data=ui_new46)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot81, plot82,ncol = 1,align = 'v')
+```
+
+```{r}
+#Tennessee ended the UI benefits on 3 July 2021
+#The secular trend shows that the state's UI claims were rising before the beginning of the pandemic. UI claims rose and fell in 2020 and 2021 but was at the pre-pandemic period as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new47 <- filter(ui_new, Year > 2019, StateFips == 47)
+ui_new47_6.25 <- hpfilter(ui_new47$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new47$ContinuedClaims_T6.25 <- ui_new47_6.25$trend
+ui_new47$ContinuedClaims_C6.25 <- ui_new47_6.25$cycle
+plot83<-ggplot(data=ui_new47,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot84<-ggplot(data=ui_new47)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot83, plot84,ncol = 1,align = 'v')
+```
+
+```{r}
+#Texas ended the UI benefits on 26 June 2021
+#The secular trend shows that the state's UI claims started falling since the middle of 2020 and was at the pre-pandemic period as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new48 <- filter(ui_new, Year > 2019, StateFips == 48)
+ui_new48_6.25 <- hpfilter(ui_new48$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new48$ContinuedClaims_T6.25 <- ui_new48_6.25$trend
+ui_new48$ContinuedClaims_C6.25 <- ui_new48_6.25$cycle
+plot85<-ggplot(data=ui_new48,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot86<-ggplot(data=ui_new48)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot85, plot86,ncol = 1,align = 'v')
+```
+
+```{r}
+#Utah ended the UI benefits on 26 June 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was rising again as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new49 <- filter(ui_new, Year > 2019, StateFips == 49)
+ui_new49_6.25 <- hpfilter(ui_new49$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new49$ContinuedClaims_T6.25 <- ui_new49_6.25$trend
+ui_new49$ContinuedClaims_C6.25 <- ui_new49_6.25$cycle
+plot87<-ggplot(data=ui_new49,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot88<-ggplot(data=ui_new49)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot87, plot88,ncol = 1,align = 'v')
+```
+
+```{r}
+#Vermont ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was rising again as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new50 <- filter(ui_new, Year > 2019, StateFips == 50)
+ui_new50_6.25 <- hpfilter(ui_new50$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new50$ContinuedClaims_T6.25 <- ui_new50_6.25$trend
+ui_new50$ContinuedClaims_C6.25 <- ui_new50_6.25$cycle
+plot89<-ggplot(data=ui_new50,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot90<-ggplot(data=ui_new50)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot89, plot90,ncol = 1,align = 'v')
+```
+
+```{r}
+#Virginia ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was below the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new51 <- filter(ui_new, Year > 2019, StateFips == 51)
+ui_new51_6.25 <- hpfilter(ui_new51$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new51$ContinuedClaims_T6.25 <- ui_new51_6.25$trend
+ui_new51$ContinuedClaims_C6.25 <- ui_new51_6.25$cycle
+plot91<-ggplot(data=ui_new51,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot92<-ggplot(data=ui_new51)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot91, plot92,ncol = 1,align = 'v')
+```
+
+```{r}
+#Washington ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was below the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new53 <- filter(ui_new, Year > 2019, StateFips == 53)
+ui_new53_6.25 <- hpfilter(ui_new53$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new53$ContinuedClaims_T6.25 <- ui_new53_6.25$trend
+ui_new53$ContinuedClaims_C6.25 <- ui_new53_6.25$cycle
+plot93<-ggplot(data=ui_new53,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot94<-ggplot(data=ui_new53)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot93, plot94,ncol = 1,align = 'v')
+```
+
+```{r}
+#West Virginia ended the UI benefits on 19 June 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was below the pre-pandemic level as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new54 <- filter(ui_new, Year > 2019, StateFips == 54)
+ui_new54_6.25 <- hpfilter(ui_new54$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new54$ContinuedClaims_T6.25 <- ui_new54_6.25$trend
+ui_new54$ContinuedClaims_C6.25 <- ui_new54_6.25$cycle
+plot95<-ggplot(data=ui_new54,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot96<-ggplot(data=ui_new54)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot95, plot96,ncol = 1,align = 'v')
+```
+
+```{r}
+#Wisconsin ended the UI benefits on 4 September 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was rising again as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new55 <- filter(ui_new, Year > 2019, StateFips == 55)
+ui_new55_6.25 <- hpfilter(ui_new55$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new55$ContinuedClaims_T6.25 <- ui_new55_6.25$trend
+ui_new55$ContinuedClaims_C6.25 <- ui_new55_6.25$cycle
+plot97<-ggplot(data=ui_new55,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot98<-ggplot(data=ui_new55)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot97, plot98,ncol = 1,align = 'v')
+```
+
+```{r}
+#Wyoming ended the UI benefits on 19 June 2021
+#The secular trend shows that the state's UI claims rose and fell during 2020 and 2021 and was rising again as at 31 December 2021.
+ui_new <- ui_StateFips
+ui_new$lContinuedClaims<-log(ui_new$ContinuedClaims)
+#View(ui_new)
+ui_new56 <- filter(ui_new, Year > 2019, StateFips == 56)
+ui_new56_6.25 <- hpfilter(ui_new56$lContinuedClaims , freq = 6.25,type = "lambda")
+ui_new56$ContinuedClaims_T6.25 <- ui_new56_6.25$trend
+ui_new56$ContinuedClaims_C6.25 <- ui_new56_6.25$cycle
+plot99<-ggplot(data=ui_new56,group = 1)+ 
+geom_line(aes(x=FiledWeekEnded,y=lContinuedClaims,color='Log Continued Claims'),size=1) + geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_T6.25,color='Log Continued Claims Secular'),linetype=1,size=1) +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims'='blue','Log Continued Claims Secular'='red'))+ggtitle('Continued Claims Trend')+theme(plot.title = element_text(hjust = 1))
+
+plot100<-ggplot(data=ui_new56)+ 
+geom_line(aes(x=FiledWeekEnded,y=ContinuedClaims_C6.25,color='Log Continued Claims Cycle'),size=1,linetype=1)  +xlab("Filed Week Ended")+ylab("")+scale_colour_manual(name="",values=c('Log Continued Claims Cycle'='blue'))+ggtitle('Continued Claims Cycle')+theme(plot.title = element_text(hjust = 1))
+```
+
+```{r}
+plot_grid(plot99, plot100,ncol = 1,align = 'v')
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
